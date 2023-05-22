@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Skyhook</title>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <script src="%PUBLIC_URL%/react.production.min.js"></script>
+    <script src="%PUBLIC_URL%/react-dom.production.min.js"></script>
+    <script src="%PUBLIC_URL%/react-bootstrap.min.js"></script>
+    <script src="%PUBLIC_URL%/wasm_exec.js"></script>
+    <script>
+      const go = new Go();
+      WebAssembly.instantiateStreaming(fetch("%PUBLIC_URL%/algos.wasm"), go.importObject).then((result) => {
+        go.run(result.instance);
+      });
+
+      // Load WASM bytes
+      let algos_wasm;
+      fetch("%PUBLIC_URL%/algos.wasm").then((algos) => {
+        algos.arrayBuffer().then((buff) => {algos_wasm=buff})})
+
+      // Load WASM glue
+      let wasm_exec;
+      fetch("%PUBLIC_URL%/wasm_exec.js")
+              .then((b) => {b.blob().then((d) => {d.text().then((t) => {wasm_exec=t})})})
+
+      // Load WASM helpers
+      let wasm_helpers;
+      fetch("%PUBLIC_URL%/wasm_helpers.js")
+              .then((b) => {b.blob().then((d) => {d.text().then((t) => {wasm_helpers=t})})})
+
+      // Load WASM WebWorker blob
+      let wasm_worker;
+      fetch("%PUBLIC_URL%/wasm_worker.js")
+              .then((b) => {b.blob().then((d) => {d.text().then((t) => {wasm_worker=window.URL.createObjectURL(new Blob([t]))})})})
+    </script>
+    <script src="%PUBLIC_URL%/wasm_helpers.js"></script>
+    <link rel="stylesheet" href="%PUBLIC_URL%/bootstrap.min.css"/>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
