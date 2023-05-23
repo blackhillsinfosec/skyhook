@@ -24,6 +24,7 @@ jobs:
   # ================================
 
   build_admin_wapp:
+    needs: [get_tagged_version]
     runs-on: ubuntu-latest
     container:
       image: node:current-bullseye-slim
@@ -40,6 +41,7 @@ jobs:
       run: cd server/web_apps/admin && npm install && npm run build
       
   build_file_wapp:
+    needs: [get_tagged_version]
     runs-on: ubuntu-latest
     container:
       image: node:current-bullseye-slim
@@ -64,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: golang:1.19-bullseye
-    needs: [build_admin_wapp, build_file_wapp]
+    needs: [get_tagged_version, build_admin_wapp, build_file_wapp]
     steps:
     - uses: actions/checkout@v3
     
