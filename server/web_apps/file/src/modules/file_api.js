@@ -724,6 +724,9 @@ class AuthMgr {
                     }
                     config = new TextDecoder("utf8").decode(config);
                     config = JSON.parse(config);
+                    if(config.obfuscators === null){
+                        config.obfuscators=[];
+                    }
                     if(config.obfuscators){
                         let cached = localStorage.getItem("api_config");
                         if(cached){
