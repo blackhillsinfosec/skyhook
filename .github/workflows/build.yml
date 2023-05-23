@@ -1,0 +1,107 @@
+on:
+  push:
+    branches:
+    - master
+    tags:
+    - '!**-dev'
+    
+jobs:
+
+  # ===============
+  # GET CURRENT TAG
+  # ===============
+
+  # yoinked from: https://stackoverflow.com/questions/58177786/get-the-current-pushed-tag-in-github-actions
+  get_tagget_version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get Tag Version
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+  # ================================
+  # BUILD AND CACHE WEB APPLICATIONS
+  # ================================
+
+  build_admin_wapp:
+    runs-on: ubuntu-latest
+    container:
+      image: node:current-bullseye-slim
+    name: Build Admin WApp
+    steps:
+    - uses: actions/checkout@v3
+    - name: Cache Admin WApp
+      id: cache-admin-wapp
+      uses: actions/cache@v3
+      with:
+        path: server/web_apps/admin/build
+        key: ${{ RELEASE_VERSION }}-admin-wapp-cache
+    - name: do build
+      run: cd server/web_apps/admin && npm install && npm run build
+      
+  build_file_wapp:
+    runs-on: ubuntu-latest
+    container:
+      image: node:current-bullseye-slim
+    name: Build File WApp
+    steps:
+    - uses: actions/checkout@v3
+    - name: Cache File WApp
+      id: cache-file-wapp
+      uses: actions/cache@v3
+      with:
+        path: server/web_apps/file/build
+        key: ${{ RELEASE_VERSION }}-file-wapp-cache
+    - name: do build
+      run: cd server/web_apps/file && npm install && npm run build
+      
+  # ======================
+  # BUILD SKYHOOK BINARIES
+  # ======================
+      
+  build_skyhook:
+    name: Build Skyhook
+    runs-on: ubuntu-latest
+    container:
+      image: golang:1.19-bullseye
+    needs: [build_admin_wapp, build_file_wapp]
+    steps:
+    - uses: actions/checkout@v3
+    
+    # =============================
+    # RESTORE ADMIN/FILE WAPP CACHE
+    # =============================
+    
+    - name: Restore Admin WApp Cache
+      id: admin-wapp-restore
+      uses: actions/cache/restore@v3
+      with:
+        path: server/web_apps/admin/build
+        key: ${{ runner.os }}-admin-wapp-cache
+    - name: Restore File WApp Cache
+      id: admin-file-restore
+      uses: actions/cache/restore@v3
+      with:
+        path: server/web_apps/file/build
+        key: ${{ RELEASE_VERSION }}-file-wapp-cache
+        
+    # =================
+    # BUILD AND RELEASE    
+    # =================
+
+    - name: Build Binary
+      id: build-skyhook-binary
+      run: |
+        GOOS=linux GOARCH=amd64 go build -buildvcs=false -o skyhook.elf
+        GOOS=windows GOARCH=amd64 go build -buildvcs=false -o skyhook.exe
+        GOOS=darwin GOARCH=amd64 go build -buildvcs=false -o skyhook.darwin_amd64
+        GOOS=darwin GOARCH=amd64 go build -buildvcs=false -o skyhook.darwin_arm64
+        
+    - name: Release
+      id: issue-release
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "skyhook.*"
+        allowUpdates: true
+        body: "Releasing ${{ RELEASE_VERSION }}"
+        tag: ${{ RELEASE_VERSION }}
