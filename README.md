@@ -1,10 +1,19 @@
 # Skyhook
 
-Skyhook is a REST API used to smuggle files into and out of networks
-defended by perimeter controls that inspect and act on traffic
-perceived to contain malicious content. It's packaged with user-friendly
-web applications and config file generation capabilities to get users
-up and running painlessly.
+Skyhook is a REST-driven web application used to smuggle files into and out of networks
+defended by perimeter controls that inspect and act on traffic perceived to contain malicious content.
+
+For example, here is a working obfuscation configuration:
+
+![image](https://github.com/blackhillsinfosec/skyhook/assets/11574161/d69901c7-6937-4a76-83b8-3aba4dc732f3)
+
+And here is the file transfer interface. Clicking "Download" results in the file
+being retrieved in chunks encrypted with the chain of obfuscation methods configured
+above.
+
+JavaScript deobfuscates the file before prompting the user to save it to disk.
+
+![image](https://github.com/blackhillsinfosec/skyhook/assets/11574161/379c859d-8ea5-45bd-a1ba-626902451c42)
 
 # Key Links
 
