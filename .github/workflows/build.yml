@@ -1,0 +1,106 @@
+on:
+  push: {}
+#     branches:
+#     - master
+#     tags:
+#     - '!**-dev'
+    
+jobs:
+
+  # ================================
+  # BUILD AND CACHE WEB APPLICATIONS
+  # ================================
+
+  build_admin_wapp:
+    runs-on: ubuntu-latest
+    container:
+      image: node:current-bullseye-slim
+    name: Build Admin WApp
+    steps:
+    - uses: actions/checkout@v3
+    - name: Cache Admin WApp
+      id: cache-admin-wapp
+      uses: actions/cache@v3
+      with:
+        path: server/web_apps/admin/build
+        key: ${{ runner.os }}-admin-wapp-cache
+    - name: do build
+      run: cd server/web_apps/admin && npm install && npm run build
+      
+  build_file_wapp:
+    runs-on: ubuntu-latest
+    container:
+      image: node:current-bullseye-slim
+    name: Build File WApp
+    steps:
+    - uses: actions/checkout@v3
+    - name: Cache File WApp
+      id: cache-file-wapp
+      uses: actions/cache@v3
+      with:
+        path: server/web_apps/file/build
+        key: ${{ runner.os }}-file-wapp-cache
+    - name: do build
+      run: cd server/web_apps/file && npm install && npm run build
+      
+  # ======================
+  # BUILD SKYHOOK BINARIES
+  # ======================
+      
+  build_skyhook:
+    name: Build Skyhook
+    runs-on: ubuntu-latest
+    container:
+      image: golang:1.19-bullseye
+    needs: [build_admin_wapp, build_file_wapp]
+    steps:
+    - uses: actions/checkout@v3
+    
+    # =============================
+    # RESTORE ADMIN/FILE WAPP CACHE
+    # =============================
+    
+    - name: Restore Admin WApp Cache
+      id: admin-wapp-restore
+      uses: actions/cache/restore@v3
+      with:
+        path: server/web_apps/admin/build
+        key: ${{ runner.os }}-admin-wapp-cache
+    - name: Restore File WApp Cache
+      id: admin-file-restore
+      uses: actions/cache/restore@v3
+      with:
+        path: server/web_apps/file/build
+        key: ${{ runner.os }}-file-wapp-cache
+        
+    # ===============================
+    # BUILD AND SAVE SKYHOOK BINARIES        
+    # ===============================
+
+    - name: Build Binary
+      id: build-skyhook-binary
+      run: |
+        GOOS=linux GOARCH=amd64 go build -o skyhook.elf
+        GOOS=windows GOARCH=amd64 go build -o skyhook.exe
+        GOOS=darwin GOARCH=amd64 go build -o skyhook.darwin_amd64
+        GOOS=darwin GOARCH=amd64 go build -o skyhook.darwin_arm64
+    - name: Upload Skyhook Linux
+      uses: actions/upload-artifact@v3
+      with:
+        name: skyhook.elf_amd64
+        path: skyhook.elf
+    - name: Upload Skyhook Windows
+      uses: actions/upload-artifact@v3
+      with:
+        name: skyhook.exe
+        path: skyhook.exe
+    - name: Upload Skyhook Mac AMD
+      uses: actions/upload-artifact@v3
+      with:
+        name: skyhook.darwin_amd64
+        path: skyhook.darwin_amd64
+    - name: Upload Skyhook Mac ARM
+      uses: actions/upload-artifact@v3
+      with:
+        name: skyhook.darwin_arm64
+        path: skyhook.darwin_arm64
