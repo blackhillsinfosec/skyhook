@@ -74,14 +74,14 @@ func (tw ObfResponseWriter) Write(b []byte) (int, error) {
 }
 
 // ReadFrom is implemented to intercept calls from io.CopyN, a
-// functioned used by the net.http module when serving files.
+// function used by the net.http module when serving files.
 // Intercepting at this point allows us to read in the chunk from
 // the file and obfuscate it prior to writing it to the response.
 //
 // Additional Notes:
 //
-// io.CopyN is called by http.serveContent when serving contents of
-// a file, which converts the source file to an io.LimitedReader that
+// io.CopyN is called by http.serveContent when serving file content,
+// which converts the source file to an io.LimitedReader that
 // will read up to only N bytes (per the Range header).
 func (tw ObfResponseWriter) ReadFrom(r io.Reader) (n int64, err error) {
 
