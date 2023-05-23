@@ -1,8 +1,10 @@
 # Skyhook
 
-Skyhook is a utility used to smuggle files into and out of networks
+Skyhook is a REST API used to smuggle files into and out of networks
 defended by perimeter controls that inspect and act on traffic
-perceived to contain malicious content.
+perceived to contain malicious content. It's packaged with user-friendly
+web applications and config file generation capabilities to get users
+up and running painlessly.
 
 # Key Links
 
