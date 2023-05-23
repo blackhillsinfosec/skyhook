@@ -91,5 +91,5 @@ jobs:
       with:
         artifacts: "skyhook.*"
         allowUpdates: "true"
-        body: "Releasing ${{ RELEASE_VERSION }}"
-        tag: ${{ env.RELEASE_VERSION }}
+        body: "Releasing ${{ github.ref_name }}"
+        tag: ${{ github.ref_name }}
