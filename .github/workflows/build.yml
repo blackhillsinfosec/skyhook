@@ -1,11 +1,23 @@
 on:
-  push: {}
-#     branches:
-#     - master
-#     tags:
-#     - '!**-dev'
+  push:
+    branches:
+    - master
+    tags:
+    - '!**-dev'
     
 jobs:
+
+  # ===============
+  # GET CURRENT TAG
+  # ===============
+
+  # yoinked from: https://stackoverflow.com/questions/58177786/get-the-current-pushed-tag-in-github-actions
+  get_tagget_version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get Tag Version
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
   # ================================
   # BUILD AND CACHE WEB APPLICATIONS
@@ -23,7 +35,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: server/web_apps/admin/build
-        key: ${{ runner.os }}-admin-wapp-cache
+        key: ${{ RELEASE_VERSION }}-admin-wapp-cache
     - name: do build
       run: cd server/web_apps/admin && npm install && npm run build
       
@@ -39,7 +51,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: server/web_apps/file/build
-        key: ${{ runner.os }}-file-wapp-cache
+        key: ${{ RELEASE_VERSION }}-file-wapp-cache
     - name: do build
       run: cd server/web_apps/file && npm install && npm run build
       
@@ -71,37 +83,25 @@ jobs:
       uses: actions/cache/restore@v3
       with:
         path: server/web_apps/file/build
-        key: ${{ runner.os }}-file-wapp-cache
+        key: ${{ RELEASE_VERSION }}-file-wapp-cache
         
-    # ===============================
-    # BUILD AND SAVE SKYHOOK BINARIES        
-    # ===============================
+    # =================
+    # BUILD AND RELEASE    
+    # =================
 
     - name: Build Binary
       id: build-skyhook-binary
       run: |
-        go get
         GOOS=linux GOARCH=amd64 go build -buildvcs=false -o skyhook.elf
         GOOS=windows GOARCH=amd64 go build -buildvcs=false -o skyhook.exe
         GOOS=darwin GOARCH=amd64 go build -buildvcs=false -o skyhook.darwin_amd64
         GOOS=darwin GOARCH=amd64 go build -buildvcs=false -o skyhook.darwin_arm64
-    - name: Upload Skyhook Linux
-      uses: actions/upload-artifact@v3
+        
+    - name: Release
+      id: issue-release
+      uses: ncipollo/release-action@v1
       with:
-        name: skyhook.elf_amd64
-        path: skyhook.elf
-    - name: Upload Skyhook Windows
-      uses: actions/upload-artifact@v3
-      with:
-        name: skyhook.exe
-        path: skyhook.exe
-    - name: Upload Skyhook Mac AMD
-      uses: actions/upload-artifact@v3
-      with:
-        name: skyhook.darwin_amd64
-        path: skyhook.darwin_amd64
-    - name: Upload Skyhook Mac ARM
-      uses: actions/upload-artifact@v3
-      with:
-        name: skyhook.darwin_arm64
-        path: skyhook.darwin_arm64
+        artifacts: "skyhook.*"
+        allowUpdates: true
+        body: "Releasing ${{ RELEASE_VERSION }}"
+        tag: ${{ RELEASE_VERSION }}
