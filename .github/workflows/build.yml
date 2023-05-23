@@ -80,6 +80,7 @@ jobs:
     - name: Build Binary
       id: build-skyhook-binary
       run: |
+        go get
         GOOS=linux GOARCH=amd64 go build -o skyhook.elf
         GOOS=windows GOARCH=amd64 go build -o skyhook.exe
         GOOS=darwin GOARCH=amd64 go build -o skyhook.darwin_amd64
