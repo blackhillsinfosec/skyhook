@@ -12,7 +12,7 @@ jobs:
   # ===============
 
   # yoinked from: https://stackoverflow.com/questions/58177786/get-the-current-pushed-tag-in-github-actions
-  get_tagget_version:
+  get_tagged_version:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -102,6 +102,6 @@ jobs:
       uses: ncipollo/release-action@v1
       with:
         artifacts: "skyhook.*"
-        allowUpdates: true
+        allowUpdates: "true"
         body: "Releasing ${{ RELEASE_VERSION }}"
         tag: ${{ RELEASE_VERSION }}
