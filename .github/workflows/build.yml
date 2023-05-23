@@ -7,24 +7,11 @@ on:
     
 jobs:
 
-  # ===============
-  # GET CURRENT TAG
-  # ===============
-
-  # yoinked from: https://stackoverflow.com/questions/58177786/get-the-current-pushed-tag-in-github-actions
-  get_tagged_version:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Get Tag Version
-        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-
   # ================================
   # BUILD AND CACHE WEB APPLICATIONS
   # ================================
 
   build_admin_wapp:
-    needs: [get_tagged_version]
     runs-on: ubuntu-latest
     container:
       image: node:current-bullseye-slim
@@ -36,12 +23,11 @@ jobs:
       uses: actions/cache@v3
       with:
         path: server/web_apps/admin/build
-        key: ${{ RELEASE_VERSION }}-admin-wapp-cache
+        key: ${{ github.ref_name }}-admin-wapp-cache
     - name: do build
       run: cd server/web_apps/admin && npm install && npm run build
       
   build_file_wapp:
-    needs: [get_tagged_version]
     runs-on: ubuntu-latest
     container:
       image: node:current-bullseye-slim
@@ -53,7 +39,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: server/web_apps/file/build
-        key: ${{ RELEASE_VERSION }}-file-wapp-cache
+        key: ${{ github.ref_name }}-file-wapp-cache
     - name: do build
       run: cd server/web_apps/file && npm install && npm run build
       
@@ -66,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: golang:1.19-bullseye
-    needs: [get_tagged_version, build_admin_wapp, build_file_wapp]
+    needs: [build_admin_wapp, build_file_wapp]
     steps:
     - uses: actions/checkout@v3
     
@@ -79,13 +65,13 @@ jobs:
       uses: actions/cache/restore@v3
       with:
         path: server/web_apps/admin/build
-        key: ${{ runner.os }}-admin-wapp-cache
+        key: ${{ github.ref_name }}-admin-wapp-cache
     - name: Restore File WApp Cache
       id: admin-file-restore
       uses: actions/cache/restore@v3
       with:
         path: server/web_apps/file/build
-        key: ${{ RELEASE_VERSION }}-file-wapp-cache
+        key: ${{ github.ref_name }}-file-wapp-cache
         
     # =================
     # BUILD AND RELEASE    
@@ -106,4 +92,4 @@ jobs:
         artifacts: "skyhook.*"
         allowUpdates: "true"
         body: "Releasing ${{ RELEASE_VERSION }}"
-        tag: ${{ RELEASE_VERSION }}
+        tag: ${{ env.RELEASE_VERSION }}
