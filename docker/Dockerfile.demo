@@ -1,0 +1,9 @@
+FROM amd64/alpine:3.16
+WORKDIR /
+ENV RANDOMIZE_WEBROOT="true" ENV LINK_SOCKET="127.0.0.1:8443"
+RUN apk update && apk add bash iproute2 libc6-compat curl
+COPY --chmod=700 skyhook.elf /sbin/skyhook
+COPY --chmod=700 entrypoint_demo.sh entrypoint
+VOLUME ["/webroot"]
+EXPOSE 443/tcp 65535/tcp
+ENTRYPOINT /bin/bash entrypoint
