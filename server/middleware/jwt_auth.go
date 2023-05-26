@@ -1,13 +1,13 @@
 package middleware
 
 import (
-	"encoding/json"
-	jwt "github.com/appleboy/gin-jwt/v2"
-	obfuscate "github.com/blackhillsinfosec/skyhook-obfuscation"
-	structs "github.com/blackhillsinfosec/skyhook/api_structs"
-	"github.com/blackhillsinfosec/skyhook/config"
-	"github.com/gin-gonic/gin"
-	"net/http"
+    "encoding/json"
+    jwt "github.com/appleboy/gin-jwt/v2"
+    obfuscate "github.com/blackhillsinfosec/skyhook-obfuscation"
+    structs "github.com/blackhillsinfosec/skyhook/api_structs"
+    "github.com/blackhillsinfosec/skyhook/config"
+    "github.com/gin-gonic/gin"
+    "net/http"
 )
 
 // JwtIsUnauthorized handles JwtIsUnauthorized requests.
@@ -62,12 +62,33 @@ func JwtLoginHandler(users *[]config.Credential, adminRequired bool) func(c *gin
 // JwtPayloadFunc returns a function that generates the JWT payload.
 func JwtPayloadFunc(conf *config.SkyhookConfig, obfs *[]obfuscate.Obfuscator) func(data interface{}) jwt.MapClaims {
     return func(data interface{}) jwt.MapClaims {
+
+        //=================================
+        // AVOID NIL ObfuscatorConfig SLICE
+        //=================================
+        // - JS is currently buggy
+        // - Not properly checking for null values
+        // - This ensures an empty slice is returned
+
+        var oConfs *[]obfuscate.ObfuscatorConfig
+        if oConfs = obfuscate.UnparseObfuscators(obfs); *oConfs == nil {
+            oConfs = &[]obfuscate.ObfuscatorConfig{}
+        }
+
+        //==========================================
+        // CONSTRUCT AND RETURN JWT WITH CONFIG DATA
+        //==========================================
+        // TODO creation of the JwtConfigData object should probably
+        //  be offloaded to a function, that way we can utilize the same
+        //  "user token encrypt" technique to sync the config between
+        //  without having the user copy & pasta.
+
         if v, ok := data.(*config.Credential); ok {
             var addtl []byte
             var err error
             if addtl, err = json.Marshal(JwtConfigData{
                 ApiRoutes:   conf.FileServer.Routes.Api,
-                Obfuscators: *obfuscate.UnparseObfuscators(obfs),
+                Obfuscators: *oConfs,
                 UploadConfig: UploadConfigData{
                     RangeHeaderName: conf.FileServer.RangeHeaderOptions.Name,
                     RangePrefix:     conf.FileServer.RangeHeaderOptions.RangePrefix,
@@ -77,7 +98,11 @@ func JwtPayloadFunc(conf *config.SkyhookConfig, obfs *[]obfuscate.Obfuscator) fu
                     Jwt:    conf.Auth.Jwt.SafeJwtOptions}}); err != nil {
                 panic("failed to generate JWT response data while authenticating user")
             } else {
-                // Encrypt the data with the user's token
+
+                //==============================
+                // ENCRYPT WITH THE USER'S TOKEN
+                //==============================
+
                 x := obfuscate.XOR{Key: v.Token}
                 addtl, _ = x.Obfuscate(addtl)
                 addtl = obfuscate.Base64Encode(addtl)
@@ -88,8 +113,11 @@ func JwtPayloadFunc(conf *config.SkyhookConfig, obfs *[]obfuscate.Obfuscator) fu
                 conf.Auth.Jwt.FieldKeys.Admin:    v.IsAdmin,
                 conf.Auth.Jwt.FieldKeys.Config:   string(addtl),
             }
+
         }
+
         return jwt.MapClaims{}
+
     }
 }
 
