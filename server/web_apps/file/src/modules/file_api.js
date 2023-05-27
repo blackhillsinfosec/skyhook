@@ -9,6 +9,7 @@ export var API_URIS = {
     "/landing": "/landing",
     "/login": "/login",
     "/logout": "/logout",
+    "/config": "/config",
     "/download": "/files",
     "/upload": "/upload"
 };
@@ -255,6 +256,34 @@ function request(httpMethod, uri) {
     return outer;
 }
 
+// Retrieves the user's token from local storage and attempts
+// to decrypt value.
+//
+// value is expected to be a base64 encoded string of XOR encrypted
+// bytes, the key for which is the user's token.
+function token_decrypt(value, token_key) {
+    if(!token_key){token_key = "user_token"}
+    let key = new TextEncoder().encode(localStorage.getItem(token_key));
+    if(!key){
+        throw new Error("Failed to retrieve user token from local storage")
+    }
+    value = window.atob(value);
+    let output = new Uint8Array(value.length);
+    for(let xi=0; xi<value.length; xi++){
+        output[xi] = value[xi].charCodeAt(0)^key[xi%key.byteLength]
+    }
+    value = new TextDecoder("utf8").decode(output);
+    return value
+}
+
+function get_stored_json(key){
+    return JSON.parse(localStorage.getItem(key));
+}
+
+function set_stored_json(key, json){
+    return localStorage.setItem(key, JSON.stringify(json));
+}
+
 export class FileApi {
 
     constructor(base_url, headers, realm, username_field_name, admin_field_name, auth_header_name, auth_header_scheme){
@@ -374,6 +403,50 @@ export class FileApi {
         return {
             token: data,
             alert: alert
+        }
+    }
+
+    @request("get", "/config")
+    getObfuscators(data, resp){
+        let alert;
+        let api_config;
+        if(resp.status === 200){
+            alert = {
+                variant: "success",
+                heading: "",
+                message: "Config successfully retrieved",
+                timeout: 3
+            }
+
+            // Decrypt the response body
+            let plain = JSON.parse(token_decrypt(resp.data, "user_token"));
+
+            // Extract api_config from local storage
+            api_config = get_stored_json("api_config")
+
+            // Stringify and compare obfuscator fields to detect changes
+            if(JSON.stringify(api_config.obfuscators) === JSON.stringify(plain.obfuscators)){
+                // Alert that no changes have been made
+                api_config = undefined;
+                alert.variant = "warning";
+                alert.message = "Config successfully retrieved, but no changes were detected.";
+            } else {
+                api_config.obfuscators=plain.obfuscators;
+                set_stored_json("api_config", api_config);
+            }
+
+        } else {
+            alert = {
+                variant: "danger",
+                heading: "",
+                message: "Failed to retrieve obfuscators",
+                timeout: 3
+            }
+        }
+
+        return {
+            alert:alert,
+            obfs_config: api_config === undefined ? undefined : api_config.obfuscators
         }
     }
 
@@ -711,18 +784,11 @@ class AuthMgr {
             // DECRYPT THE REQUESTS CONFIG FROM THE TOKEN
             //===========================================
 
-            let key = new TextEncoder().encode(localStorage.getItem("user_token"))
-
             let tAttrs = Object.keys(this.jwt);
             for(let i=0; i<tAttrs.length; i++){
                 let a = tAttrs[i];
                 try{
-                    let raw = window.atob(this.jwt[a]);
-                    config = new Uint8Array(raw.length);
-                    for(let xi=0; xi<raw.length; xi++){
-                        config[xi] = raw[xi].charCodeAt(0)^key[xi%key.byteLength]
-                    }
-                    config = new TextDecoder("utf8").decode(config);
+                    config = token_decrypt(this.jwt[a], "user_token");
                     config = JSON.parse(config);
                     if(config.obfuscators === null){
                         config.obfuscators=[];

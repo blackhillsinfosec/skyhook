@@ -5,17 +5,26 @@ import React from "react";
 import {
     Row, Col, Form, ListGroupItem, InputGroup,
     Button, ProgressBar, Popover, PopoverBody,
-    OverlayTrigger, ListGroup, FloatingLabel, ButtonGroup
+    OverlayTrigger, ListGroup, FloatingLabel, ButtonGroup, ButtonToolbar, Tooltip
 } from "react-bootstrap";
 import {
-    HouseFill, ArrowRepeat, ArrowLeftCircleFill,
-    FilterCircleFill, FileEarmarkPlusFill
+    HouseFill,
+    ArrowRepeat,
+    ArrowLeftCircleFill,
+    FilterCircleFill,
+    FileEarmarkPlusFill,
+    XCircleFill,
+    ToggleOff,
+    ToggleOn,
+    EmojiWinkFill,
+    EmojiSmileFill, Bezier2
 } from "react-bootstrap-icons";
 import {FileItem} from "./file_item";
 import {DirItem} from "./dir_item";
 import {UploadForm} from "./upload_form";
 import {MD5, analyzeFile, regExpEscape} from "./misc_funcs";
 import {ChunkFormFiles} from "./chunk_form_files";
+import {fileApi} from "./file_api";
 
 export class FileBrowser extends ChunkFormFiles {
 
@@ -28,6 +37,7 @@ export class FileBrowser extends ChunkFormFiles {
             send_file_data: "",
             send_file_uploading: false,
             send_file_is_bin: false,
+            show_obfs_config: false,
         }
         this.recvUploadProgress = this.recvUploadProgress.bind(this);
         this.updateField = this.updateField.bind(this);
@@ -350,64 +360,146 @@ export class FileBrowser extends ChunkFormFiles {
             </Popover>
         )
 
+        let obf_input;
+
+        if(this.state.show_obfs_config){
+            obf_input =
+            <Row>
+                <Col>
+                    <Form>
+                        <FloatingLabel label={"Current Obfuscator Configuration"}>
+                            <Form.Control
+                                as={"textarea"}
+                                disabled={true}
+                                style={{height: '200px'}}
+                                value={JSON.stringify(this.getObfConfig(), null, 4)}/>
+                        </FloatingLabel>
+                    </Form>
+                </Col>
+            </Row>
+        }
+
         //========================
         // BROWSER BAR INPUT GROUP
         //========================
 
         let browser_bar = (
-            <InputGroup size={"sm"}>
-                <Button
-                    variant={"secondary"}
-                    onClick={this.props.reload}
-                >
-                    <ArrowRepeat size={23}/>
-                </Button>
-                <OverlayTrigger
-                    trigger={"click"}
-                    placement={"bottom"}
-                    overlay={send_file_popover}>
-                    <Button
-                        variant={(this.state.send_file_name + this.state.send_file_data).length ? "warning" : "secondary"}
-                        onClick={(e) => {e.preventDefault()}}
-                    >
-                        <FileEarmarkPlusFill size={20}/>
-                    </Button>
-                </OverlayTrigger>
-                <OverlayTrigger
-                    trigger={"click"}
-                    placement={"right"}
-                    overlay={filter_popover}>
-                    <Button
-                        variant={this.state.filter_value === '' ? "secondary" : "warning"}
-                        onClick={(e) => {e.preventDefault()}}
-                    >
-                        <FilterCircleFill size={20}/>
-                    </Button>
-                </OverlayTrigger>
-                <Button
-                    variant={"secondary"}
-                    disabled={this.props.getCwd() === '/'}
-                    onClick={(e) => {
-                        e.preventDefault();
-                        this.props.inspectDir('/', true);
-                    }}
-                >
-                    <HouseFill size={20}/>
-                </Button>
-                <Button
-                    variant={"secondary"}
-                    disabled={this.props.getCwd() === '/'}
-                    onClick={(e) => {
-                        e.preventDefault();
-                        let s = this.props.getCwd().split('/');
-                        s = s.slice(0,s.length-1).join('/')
-                        this.props.inspectDir(s !== '' ? s : '/', true);
-                    }}
-                >
-                    <ArrowLeftCircleFill size={20}/>
-                </Button>
-                <Form.Control disabled value={this.props.getCwd()} size={"sm"}/>
-            </InputGroup>
+            <ButtonToolbar size={"sm"}>
+                <ButtonGroup size={"sm"} className={"me-2"}>
+                    <OverlayTrigger overlay={<Tooltip>Home</Tooltip>}>
+                        <Button
+                            variant={"secondary"}
+                            disabled={this.props.getCwd() === '/'}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                this.props.inspectDir('/', true);
+                            }}
+                        >
+                            <HouseFill size={20}/>
+                        </Button>
+                    </OverlayTrigger>
+                    <OverlayTrigger overlay={<Tooltip>Back</Tooltip>}>
+                        <Button
+                            variant={"secondary"}
+                            disabled={this.props.getCwd() === '/'}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                let s = this.props.getCwd().split('/');
+                                s = s.slice(0,s.length-1).join('/')
+                                this.props.inspectDir(s !== '' ? s : '/', true);
+                            }}
+                        >
+                            <ArrowLeftCircleFill size={20}/>
+                        </Button>
+                    </OverlayTrigger>
+                    <OverlayTrigger overlay={<Tooltip>Toggle Staging</Tooltip>}>
+                        <Button
+                            variant={"secondary"}
+                            onClick={( e) => {
+                                e.preventDefault();
+                                this.props.toggleStaging();
+                            }}
+                        >
+                            {this.props.stagingEnabled ? <ToggleOn size={20}/> : <ToggleOff size={20}/>}
+                        </Button>
+                    </OverlayTrigger>
+                    <OverlayTrigger overlay={<Tooltip>Reload File Listing</Tooltip>}>
+                        <Button
+                            variant={"secondary"}
+                            onClick={this.props.reload}
+                        >
+                            <ArrowRepeat size={23}/>
+                        </Button>
+                    </OverlayTrigger>
+                </ButtonGroup>
+                <ButtonGroup size={"sm"} className={"me-2"}>
+                    <OverlayTrigger
+                        trigger={"click"}
+                        placement={"bottom"}
+                        overlay={send_file_popover}>
+                        <Button
+                            variant={(this.state.send_file_name + this.state.send_file_data).length ? "warning" : "secondary"}
+                            onClick={(e) => {e.preventDefault()}}
+                        >
+                            <FileEarmarkPlusFill size={20}/>
+                        </Button>
+                    </OverlayTrigger>
+                    <OverlayTrigger
+                        trigger={"click"}
+                        placement={"right"}
+                        overlay={filter_popover}>
+                        <Button
+                            variant={this.state.filter_value === '' ? "secondary" : "warning"}
+                            onClick={(e) => {e.preventDefault()}}
+                        >
+                            <FilterCircleFill size={20}/>
+                        </Button>
+                    </OverlayTrigger>
+                </ButtonGroup>
+                <ButtonGroup size={"sm"} className={"me-2"}>
+                    <OverlayTrigger overlay={<Tooltip>{this.state.show_obfs_config ? "Hide" : "Show"} Obfuscators</Tooltip>}>
+                        <Button
+                            variant={"secondary"}
+                            onClick={( e) => {
+                                e.preventDefault();
+                                this.setState({show_obfs_config:!this.state.show_obfs_config});
+                            }}
+                        >
+                            {this.state.show_obfs_config ? <EmojiWinkFill size={20}/> : <EmojiSmileFill size={20}/>}
+                        </Button>
+                    </OverlayTrigger>
+                    <OverlayTrigger overlay={<Tooltip>Reload Obfuscators</Tooltip>}>
+                        <Button
+                            variant={"secondary"}
+                            onClick={( e) => {
+                                e.preventDefault();
+                                // this.props.inspectDir('/', true);
+                                fileApi.getObfuscators().then(out => {
+                                    if(out.output.obfs_config) {
+                                        this.props.sendObfsConfig(out.output.obfs_config);
+                                    }
+                                    this.props.sendAlert(out.output.alert);
+                                })
+                            }}
+                        >
+                            <Bezier2 size={20}/>
+                        </Button>
+                    </OverlayTrigger>
+                </ButtonGroup>
+                <ButtonGroup size={"sm"} className={"me-2"}>
+                    <OverlayTrigger overlay={<Tooltip>Log Out</Tooltip>}>
+                        <Button
+                            variant={"danger"}
+                            onClick={( e) => {
+                                e.preventDefault();
+                                this.props.doLogout();
+                            }}
+                        >
+                            <XCircleFill size={20}/>
+                        </Button>
+                    </OverlayTrigger>
+                </ButtonGroup>
+            </ButtonToolbar>
         );
 
         return (
@@ -416,9 +508,15 @@ export class FileBrowser extends ChunkFormFiles {
                     <Col>
                         <Row className={"mb-1"}>
                             <Col className={"mt-1"}>
+                                <Form.Control disabled value={this.props.getCwd()} size={"sm"}/>
+                            </Col>
+                        </Row>
+                        <Row className={"mb-1"}>
+                            <Col className={"mt-1"}>
                                 {browser_bar}
                             </Col>
                         </Row>
+                        {obf_input}
                         <Row className={"justify-content-between"}>
                             <UploadForm
                                 maxChunkSize={this.props.maxChunkSize}

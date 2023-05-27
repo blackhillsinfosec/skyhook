@@ -552,20 +552,12 @@ func genSkyhookConfig(cmd *cobra.Command, args []string) {
                 Password: rando.AnyString(uint32(20), " "),
                 IsAdmin:  true,
                 Token:    rando.AnyAsciiString(uint32(10), true, ""),
-                //Token: config.Token{
-                //	Private: rando.AnyAsciiString(uint32(10), true, ""),
-                //	Public:  rando.AnyAsciiString(uint32(10), true, ""),
-                //},
             },
             {
                 Username: rando.AnyString(uint32(7), "-"),
                 Password: rando.AnyString(uint32(20), " "),
                 IsAdmin:  false,
                 Token:    rando.AnyAsciiString(uint32(10), true, ""),
-                //Token: config.Token{
-                //	Private: rando.AnyAsciiString(uint32(10), true, ""),
-                //	Public:  rando.AnyAsciiString(uint32(10), true, ""),
-                //},
             }}})
     fmt.Println(string(configBytes))
 }

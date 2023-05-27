@@ -1,15 +1,13 @@
 /* global skyB64 skyStob skyBtos skyMd5Sum RunObfs algos_wasm wasm_exec wasm_helpers wasm_worker */
 /* exported skyB64 skyStob skyBtos skyMd5Sum RunObfs algos_wasm wasm_exec wasm_helpers wasm_worker */
 import React from "react";
-import {Nav, Row, Col} from "react-bootstrap";
-import {ArrowUp, FolderFill, GearFill} from "react-bootstrap-icons";
+import {Nav, Row} from "react-bootstrap";
+import {ArrowUp, FolderFill} from "react-bootstrap-icons";
 import {fileApi} from "./file_api";
 import {NAMES_DB_NAME, MEGABYTE, REC_CHUNK_SIZE, MAX_CHUNK_SIZE, STAGING_ENABLED_NAME} from "./constants";
 import {mbsToBs} from "./misc_funcs";
 import {FileBrowser} from "./file_browser";
 import {UploadBrowser} from "./upload_browser";
-import {ObfuscatorForm} from "./obfuscator_form";
-import {MiscConfigs} from "./misc_configs";
 
 export class BrowserPane extends React.Component {
 
@@ -251,21 +249,6 @@ export class BrowserPane extends React.Component {
                         <ArrowUp size={20}/>Uploads
                     </Nav.Link>
                 </Nav.Item>
-                <Nav.Item>
-                    <Nav.Item>
-                        <Nav.Link
-                            href={"#config"}
-                            eventKey={"config"}
-                            active={this.state.mode === "config"}
-                            onClick={(e) => {
-                                e.preventDefault();
-                                this.setState({mode:"config"})
-                            }}
-                        >
-                            <GearFill size={20}/> Config
-                        </Nav.Link>
-                    </Nav.Item>
-                </Nav.Item>
             </Nav>
         );
 
@@ -292,6 +275,9 @@ export class BrowserPane extends React.Component {
                         deregisterTransfer={this.deregisterTransfer}
                         stagingEnabled={this.state.staging_enabled}
                         sendAlert={this.props.sendAlert}
+                        sendObfsConfig={this.recvObfsConfigFormUpdate}
+                        toggleStaging={this.toggleStaging}
+                        doLogout={this.logout}
                     />
                 </Row>
                 <Row className={this.state.mode === "uploads" ? "" : "d-none"}>
@@ -299,23 +285,6 @@ export class BrowserPane extends React.Component {
                         getObfsConfig={this.sendObfsConfig}
                         sendAlert={this.props.sendAlert}
                     />
-                </Row>
-                <Row className={this.state.mode === "config" ? "" : "d-none"}>
-                    <Col className={"col-12 border border-top-0 border-2 border-secondary border-opacity-25 p-3"}>
-                        <MiscConfigs
-                            stagingEnabled={this.state.staging_enabled}
-                            toggleStaging={this.toggleStaging}
-                            doLogout={this.logout}
-                            sendAlert={this.props.sendAlert}
-                        />
-                        <ObfuscatorForm
-                            canConfigure={this.transferCount() === 0}
-                            sendDisabledUpdate={this.recvObfsConfigFormDisabled}
-                            sendFormUpdate={this.recvObfsConfigFormUpdate}
-                            sendAlert={this.props.sendAlert}
-                            config={this.state.obfs_config}
-                        />
-                    </Col>
                 </Row>
             </Row>
         )
