@@ -5,6 +5,7 @@ key.pem
 *.swp
 
 skyhook
+skyhook.elf
 skyhook.exe
 webroot/*
 */node_modules/
