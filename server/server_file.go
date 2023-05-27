@@ -85,7 +85,7 @@ func (ss *SkyhookServer) Run(detach bool) (err error) {
         IdentityHandler: mw.JwtIdentityHandler(
             &ss.Global.Auth.Jwt.FieldKeys.Username,
             &ss.Global.Auth.Jwt.FieldKeys.Admin),
-        PayloadFunc: mw.JwtPayloadFunc(ss.Global, ss.ObfuscatorChain)}); err != nil {
+        PayloadFunc: mw.JwtPayloadFunc(ss.Global)}); err != nil {
 
         log.ERR.Printf("Failed to initialize JWT auth: %v", err)
         return err
@@ -154,6 +154,8 @@ func (ss *SkyhookServer) Run(detach bool) (err error) {
     r.GET("/login", authMiddleWare.RefreshHandler)
     r.POST("/login", authMiddleWare.LoginHandler)
     r.POST(ss.Config.Routes.Api.Logout, authMiddleWare.LogoutHandler)
+    r.GET(ss.Config.Routes.Api.OperatingConfig, authMiddleWare.MiddlewareFunc(),
+        ss.GetOperatingConfig)
 
     //=============================
     // OBFUSCATED FILE CHUNK ROUTES
@@ -394,6 +396,20 @@ func (ss *SkyhookServer) UploadFinished(c *gin.Context) {
             Success: true,
             Message: "Upload deregistered.",
         })
+    }
+}
+
+func (ss *SkyhookServer) GetOperatingConfig(c *gin.Context) {
+    claims := jwt.ExtractClaims(c)
+    if user, ok := ss.Global.GetUser(claims["user"].(string)); !ok {
+        c.AbortWithStatus(http.StatusBadRequest)
+    } else {
+        od := structs.NewOperatingConfigData(*ss.Global)
+        if data, err := od.JsonCryptMarshal(user.Token); err != nil {
+            c.AbortWithStatus(http.StatusBadRequest)
+        } else {
+            c.String(http.StatusOK, data)
+        }
     }
 }
 

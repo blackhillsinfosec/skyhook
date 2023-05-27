@@ -201,3 +201,8 @@ type UploadConfigData struct {
     RangeHeaderName string `json:"range_header_name" yaml:"range_header_name"`
     RangePrefix     string `json:"range_prefix" yaml:"range_prefix"`
 }
+
+type OperatingConfigResponse struct {
+    BaseResponse    `mapstructure:",squash"`
+    OperatingConfig string `json:"operating_config" yaml:"operating_config" mapstructure:"operating_config"`
+}

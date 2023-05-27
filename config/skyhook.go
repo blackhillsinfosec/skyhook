@@ -77,9 +77,10 @@ type EncryptedInterfaceLoaderRoutes struct {
 // FileServerApiRoutes defines web routes to the file server's
 // API endpoints.
 type FileServerApiRoutes struct {
-    Logout   string `nonzero:"/logout" yaml:"logout" mapstructure:"logout" json:"logout"`
-    Download string `nonzero:"/files" yaml:"download" mapstructure:"download" json:"download"`
-    Upload   string `nonzero:"/upload" yaml:"upload" mapstructure:"upload" json:"upload"`
+    Logout          string `nonzero:"/logout" yaml:"logout" mapstructure:"logout" json:"logout"`
+    Download        string `nonzero:"/files" yaml:"download" mapstructure:"download" json:"download"`
+    Upload          string `nonzero:"/upload" yaml:"upload" mapstructure:"upload" json:"upload"`
+    OperatingConfig string `nonzero:"/config" yaml:"config" json:"config" mapstructure:"config"`
 }
 
 // FileServerRouteOptions aggregates various sets of options
@@ -256,6 +257,15 @@ type SkyhookConfig struct {
     FileServer  FileServerOptions  `nonzero:"" mapstructure:"file_server_config" yaml:"file_server_config"`
     Users       []Credential       `nonzero:""`
     Auth        AuthOptions        `nonzero:"" mapstructure:"auth_config" yaml:"auth_config"`
+}
+
+func (sc *SkyhookConfig) GetUser(username string) (Credential, bool) {
+    for _, cred := range sc.Users {
+        if cred.Username == username {
+            return cred, true
+        }
+    }
+    return Credential{}, false
 }
 
 // GetObfuscatorConfigs returns the current obfuscation configuration.

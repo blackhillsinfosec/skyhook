@@ -1,27 +1,27 @@
 package server
 
 import (
-	"context"
-	"embed"
-	"errors"
-	"fmt"
-	jwt "github.com/appleboy/gin-jwt/v2"
-	obfs "github.com/blackhillsinfosec/skyhook-obfuscation"
-	structs "github.com/blackhillsinfosec/skyhook/api_structs"
-	"github.com/blackhillsinfosec/skyhook/config"
-	"github.com/blackhillsinfosec/skyhook/log"
-	mw "github.com/blackhillsinfosec/skyhook/server/middleware"
-	fsUtil "github.com/blackhillsinfosec/skyhook/util/fs"
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
-	"golang.org/x/exp/slices"
-	"gopkg.in/yaml.v3"
-	"net/http"
-	"os"
-	"path"
-	"strings"
-	"sync"
-	"time"
+    "context"
+    "embed"
+    "errors"
+    "fmt"
+    jwt "github.com/appleboy/gin-jwt/v2"
+    obfs "github.com/blackhillsinfosec/skyhook-obfuscation"
+    structs "github.com/blackhillsinfosec/skyhook/api_structs"
+    "github.com/blackhillsinfosec/skyhook/config"
+    "github.com/blackhillsinfosec/skyhook/log"
+    mw "github.com/blackhillsinfosec/skyhook/server/middleware"
+    fsUtil "github.com/blackhillsinfosec/skyhook/util/fs"
+    "github.com/gin-contrib/cors"
+    "github.com/gin-gonic/gin"
+    "golang.org/x/exp/slices"
+    "gopkg.in/yaml.v3"
+    "net/http"
+    "os"
+    "path"
+    "strings"
+    "sync"
+    "time"
 )
 
 var (
@@ -81,7 +81,7 @@ func (as *AdminServer) Run() (err error) {
         IdentityHandler: mw.JwtIdentityHandler(
             &as.Global.Auth.Jwt.FieldKeys.Username,
             &as.Global.Auth.Jwt.FieldKeys.Admin),
-        PayloadFunc: mw.JwtPayloadFunc(as.Global, as.ObfuscatorChain)}); err != nil {
+        PayloadFunc: mw.JwtPayloadFunc(as.Global)}); err != nil {
 
         log.ERR.Printf("Failed to initialize JWT auth: %v", err)
         return err

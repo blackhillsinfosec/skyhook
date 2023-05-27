@@ -513,9 +513,10 @@ func genSkyhookConfig(cmd *cobra.Command, args []string) {
             },
             Routes: config.FileServerRouteOptions{
                 Api: config.FileServerApiRoutes{
-                    Logout:   apiRoutes["logout"],
-                    Download: apiRoutes["download"],
-                    Upload:   apiRoutes["upload"],
+                    Logout:          apiRoutes["logout"],
+                    Download:        apiRoutes["download"],
+                    Upload:          apiRoutes["upload"],
+                    OperatingConfig: apiRoutes["config"],
                 },
                 LandingPage:     landingRoutes,
                 EncryptedLoader: loaderRoutes,
