@@ -69,39 +69,8 @@ type EncryptedInterfaceLoaderRoutes struct {
   // Html is the web path referencing a blank HTML document
   // that Js can be pasted into via the developer tools, enabling
   // proper configuration of CORS.
-  //
-  // See Js for a description on how to decrypt and initiate the loader.
   Html string `yaml:"html" json:"html" mapstructure:"html"`
   // Js is the web path referencing the JS encrypted loader.
-  //
-  // This loader is dynamically generated at each reference. It's
-  // encrypted with a secret shared among all users defined in
-  // LandingFileEncryptionOptions.Key.
-  //
-  // # Loader Decryption Methods
-  //
-  // Operators can decrypt the loader using one of two methods:
-  //
-  // ## Pass the Key to Developer Tools Variable
-  //
-  // Opening the browser's developer tools and observing
-  // a variable name logged to the script console. Set this
-  // variable to LandingFileEncryptionOptions.Key to initiate
-  // decryption.
-  //
-  // ## Pass the Key to the Browser's URL Bar
-  //
-  // If access to developer tools has been restricted, the
-  // encryption key can be passed to JS via browser URL bar. This
-  // technique makes use of the value set to
-  // LandingFileEncryptionOptions.UriParam.
-  //
-  // Example where curly brackets indicate parameter values:
-  //
-  // https://files.somedomain.com/path/to/AutoHTML#{UriParam}={Key}
-  //
-  // NOTE: Although the value appears in the URL bar of the browser,
-  // the key _is not_ sent to the server. (tested in Chrome)
   Js string `yaml:"js" json:"js" mapstructure:"js"`
 }
 
@@ -123,9 +92,6 @@ type FileServerRouteOptions struct {
   // routes, and the fact that they're likely to change in
   // the future, this is represented as a simple mapping of
   // strings.
-  //
-  // Note: Use the generate config subcommand under server
-  // to generate randomized values.
   LandingPage map[string]string `nonzero:"" json:"landing_page" yaml:"landing_page" mapstructure:"landing_page"`
 }
 
