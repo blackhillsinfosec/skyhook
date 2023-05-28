@@ -254,6 +254,7 @@ class PanelControllerButtonGroup extends React.Component {
                         key={`new-user-form`}
                         mode={"new"}
                         username={""}
+                        token={""}
                         password={""}
                         is_admin={false}
                         sendAlert={this.props.sendAlert}

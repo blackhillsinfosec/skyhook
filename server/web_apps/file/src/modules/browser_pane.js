@@ -99,7 +99,7 @@ export class BrowserPane extends React.Component {
 
     async logout(){
         let out = fileApi.postLogout();
-        if(out.alert){
+        if(out.output.alert){
             this.props.sendAlert(out.alert);
         }
     }

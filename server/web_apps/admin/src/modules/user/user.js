@@ -118,7 +118,7 @@ export class UserForm extends React.Component {
 
     render(){
 
-        let canSave = false;
+        let canSave = this.state.mode === "new";
         if (this.state.mode === "edit") {
             canSave = (
                 this.state.username !== this.props.username ||

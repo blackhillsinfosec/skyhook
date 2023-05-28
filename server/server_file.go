@@ -401,7 +401,7 @@ func (ss *SkyhookServer) UploadFinished(c *gin.Context) {
 
 func (ss *SkyhookServer) GetOperatingConfig(c *gin.Context) {
     claims := jwt.ExtractClaims(c)
-    if user, ok := ss.Global.GetUser(claims["user"].(string)); !ok {
+    if user, ok := ss.Global.GetUser(claims["id"].(string)); !ok {
         c.AbortWithStatus(http.StatusBadRequest)
     } else {
         od := structs.NewOperatingConfigData(*ss.Global)
