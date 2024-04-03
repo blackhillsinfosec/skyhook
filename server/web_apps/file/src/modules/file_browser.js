@@ -179,10 +179,7 @@ export class FileBrowser extends ChunkFormFiles {
 
                 if(reg && directories[i].name.search(reg) === -1){ continue }
 
-                let abs_path = `/${directories[i].name}`;
-                if(this.props.getCwd() !== '/'){
-                    abs_path = `${this.props.getCwd()}${abs_path}`;
-                }
+                let abs_path = `${this.props.getCwd()}${directories[i].name}/`;
 
                 dirEles.push(
                     <DirItem
@@ -404,8 +401,7 @@ export class FileBrowser extends ChunkFormFiles {
                             disabled={this.props.getCwd() === '/'}
                             onClick={(e) => {
                                 e.preventDefault();
-                                let s = this.props.getCwd().split('/');
-                                s = s.slice(0,s.length-1).join('/')
+                                let s = [...this.props.getCwd().matchAll('.*?/')].slice(0,-1).join('');
                                 this.props.inspectDir(s !== '' ? s : '/', true);
                             }}
                         >
